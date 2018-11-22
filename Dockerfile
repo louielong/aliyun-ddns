@@ -1,5 +1,5 @@
 FROM python:2.7
-MAINTAINER Jingxi Wang
+MAINTAINER Louie Long
 
 # 设置工作空间
 RUN mkdir -p /usr/src/app

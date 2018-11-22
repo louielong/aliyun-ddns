@@ -5,11 +5,12 @@ from aliyunsdkcore import client as acsclient
 from aliyunsdkalidns.request.v20150109 import UpdateDomainRecordRequest
 from aliyunsdkalidns.request.v20150109 import DescribeDomainRecordsRequest
 
+import os
+import sys
 import time
 import json
-import re as regular
 import requests
-import os
+import re as regular
 
 
 class Client:
@@ -24,7 +25,7 @@ class Client:
                                        self.config['Region'].encode())
 
         # 不存在RecordID，则获取RecordID
-        if not self.config.has_key('RecordID'):
+        if self.config['RecordID'] == '0000000000000000':
             self.GetRecordID()
 
         self.config['IP'] = ip
@@ -37,7 +38,8 @@ class Client:
         id_r.set_RRKeyWord(self.config['RR'].encode())
         id_re = self.clt.do_action(id_r)
         print id_re
-        self.config['RecordID'] = regular.findall(pattern="<RecordId>(\d*)</RecordId>", string=id_re)[0]
+        self.config['RecordID'] = regular.findall(
+                pattern="<RecordId>(\d*)</RecordId>", string=id_re)[0]
         with open(self.filepath, "w") as f:
             f.write(json.dumps(self.config))
 
@@ -67,8 +69,17 @@ def Log(content):
 
 # 获取IP
 def GetIP():
-    # 请求api接口
-    response = requests.get("http://ip.taobao.com/service/getIpInfo.php?ip=myip")
+    print '正在获取公网IP'
+    for i in range(1, 10):
+        # 请求api接口
+        response = requests.get(
+                "http://ip.taobao.com/service/getIpInfo.php?ip=myip")
+        if response.status_code == 200:
+            break
+        if i == 9:
+            Log("Can't get public IP")
+            sys.exit("Can't get public IP")
+        time.sleep(0.05)
 
     # 提取出其中的IP
     jsonBody = json.loads(response.text)
@@ -102,7 +113,7 @@ if __name__ == '__main__':
     # 是否记录
     is_log = 1
 
-    Log('---------------------------------------------------------')
+    Log('-------------------start aliyun ddns-------------------------')
 
     # 锁
     # CheckLock()
