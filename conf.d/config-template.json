@@ -2,7 +2,9 @@
   "Key": "xxxxxxxxxxxxxxxx",
   "Secret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
   "Domain": "xxx.com",
-  "RR": "xxxxxxxx",
-  "RecordID": "0000000000000000",
+  "RR": ["@, www, ddns"],
+  "Line": ["default, telecom, unicom"],
+  "RecordID": ["0", "0", "0", "0", "0"],
+  "IP": "x.x.x.x",
   "Region": "cn-shenzhen"
 }

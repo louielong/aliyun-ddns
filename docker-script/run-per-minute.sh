@@ -1,9 +1,9 @@
-#!/bin/bash  
+#!/bin/bash
 
- 
-while :; do  
+
+while :; do
     python main.py
-  
-    # wait for 60 seconds  
-    sleep 60
-done  
+
+    # wait for 300 seconds
+    sleep 300
+done

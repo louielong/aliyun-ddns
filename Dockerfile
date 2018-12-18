@@ -1,6 +1,9 @@
 FROM python:2.7
 MAINTAINER Louie Long
 
+# 设置时区
+RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
 # 设置工作空间
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app/

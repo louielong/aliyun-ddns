@@ -11,6 +11,7 @@ import time
 import json
 import requests
 import re as regular
+import xml.etree.ElementTree as ET
 
 
 class Client:
@@ -23,38 +24,59 @@ class Client:
         self.clt = acsclient.AcsClient(self.config['Key'].encode(),
                                        self.config['Secret'].encode(),
                                        self.config['Region'].encode())
-
         # 不存在RecordID，则获取RecordID
-        if self.config['RecordID'] == '0000000000000000':
-            self.GetRecordID()
-
-        self.config['IP'] = ip
-        self.UpdateRecord()
-
-    # 获取记录ID
-    def GetRecordID(self):
-        id_r = DescribeDomainRecordsRequest.DescribeDomainRecordsRequest()
-        id_r.set_DomainName(self.config['Domain'].encode())
-        id_r.set_RRKeyWord(self.config['RR'].encode())
-        id_re = self.clt.do_action(id_r)
-        print id_re
-        self.config['RecordID'] = regular.findall(
-                pattern="<RecordId>(\d*)</RecordId>", string=id_re)[0]
+        for i, RR in enumerate(self.config['RR']):
+            if self.config['RecordID'][i] == '0000000000000000' or \
+                    self.config['RecordID'][i] == '0':
+                self.GetRecordID(i)
+            # RecordID isn't exist in aliyun
+            if self.config['RecordID'][i] == '0':
+                continue
+            self.config['IP'] = ip
+            self.UpdateRecord(i)
         with open(self.filepath, "w") as f:
             f.write(json.dumps(self.config))
 
+    # 获取记录ID
+    def GetRecordID(self, i):
+        id_r = DescribeDomainRecordsRequest.DescribeDomainRecordsRequest()
+        id_r.set_DomainName(self.config['Domain'].encode())
+        id_r.set_RRKeyWord(self.config['RR'][i].encode())
+        id_re = self.clt.do_action(id_r)
+        # parser aliyun dns Record xml
+        root = ET.fromstring(str(id_re))
+        for domainrecord in root.findall("DomainRecords"):
+            if len(domainrecord) < 1:
+                Log('"%s.%s" record is not register in aliyun, please register first'
+                        % (self.config['RR'][i], self.config['Domain']))
+                self.config['RecordID'][i] = '0'
+            else:
+                for record in domainrecord.findall("Record"):
+                    Line = record.find("Line").text
+                    if Line == self.config['Line'][i]:
+                        self.config['RecordID'][i] = record.find("RecordId").text
+
     # 更新域名记录
-    def UpdateRecord(self):
+    def UpdateRecord(self, i):
         ur_r = UpdateDomainRecordRequest.UpdateDomainRecordRequest()
-        ur_r.set_RR(self.config['RR'].encode())
-        ur_r.set_RecordId(self.config['RecordID'].encode())
+        ur_r.set_RR(self.config['RR'][i].encode())
+        ur_r.set_RecordId(self.config['RecordID'][i].encode())
         ur_r.set_Type('A')
         ur_r.set_Value(self.config['IP'].encode())
-        ur_r.set_Line("default")
+        ur_r.set_Line(self.config['Line'][i])
         ur_re = self.clt.do_action(ur_r)
 
+        #print ur_re
         # 记录域名设置结果
-        Log('Aliyun DNS Response: ' + ur_re)
+        Log("********************************")
+        root = ET.fromstring(str(ur_re))
+        if "UpdateDomainRecordResponse" == root.tag:
+            Log('Update dns %s: A %s.%s %s %s' % (self.config['RecordID'][i],
+                self.config['RR'][i], self.config['Domain'], self.config['IP'], self.config['Line'][i]))
+        elif "Error" == root.tag:
+            Log('"%s.%s" record : %s' % (self.config['RR'][i], self.config['Domain'],
+                root.find("Message").text))
+        Log("********************************")
 
 
 # 日志持久化
@@ -131,7 +153,7 @@ if __name__ == '__main__':
                 client = Client(os.path.join(dirpath, filename), ip)
 
     # 记录时间
-    Log('Time: ' + time.ctime())
+    Log('Run Time: ' + time.ctime())
 
     # 移除锁
     # RemoveLock()
