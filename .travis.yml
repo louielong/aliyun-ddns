@@ -1,0 +1,20 @@
+#########################################################################
+# File Name: .travis.yml
+# Author: louie.long
+# Mail: ylong@biigroup.cn
+# Created Time: Wed 19 Dec 2018 09:50:36 AM CST
+# Description: travis ci build file
+#########################################################################
+
+language: shell
+
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker pull python:2.7
+
+script:
+  - docker build . -t l0uie/aliyun-ddns
