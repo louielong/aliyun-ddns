@@ -1,5 +1,7 @@
 # aliyun-ddns
 
+[![Build Status](https://travis-ci.org/louielong/aliyun-ddns.svg?branch=master)](https://travis-ci.org/louielong/aliyun-ddns)
+
 为阿里云注册的域名实现DDNS动态解析功能（类似花生壳），使用Python实现并支持docker。
 
 # 使用
@@ -8,7 +10,7 @@
 
 在使用之前，请确定你安装了python 2.7版本，以及pip。
 
-1）将项目中，`conf.d` 文件夹下内的配置文件 `config-template.json` 修改为 `config.conf`，并按照说明，完成配置。
+1）将项目中，`conf.d` 文件夹下内的配置文件 `config-template.json` 修改为 `config.json`，并按照说明，完成配置。
 
 2）在项目根目录下，执行：
 ```shell
@@ -24,7 +26,7 @@ python main.py
 
 2.1 下载项目源码构建
 
-1）将项目中，`conf.d` 文件夹下内的配置文件 `config-template.json` 修改为 `config.conf`，并按照说明，完成配置。
+1）将项目中，`conf.d` 文件夹下内的配置文件 `config-template.json` 修改为 `config.json`，并按照说明，完成配置。
 
 **[配置文件说明](https://help.aliyun.com/document_detail/29774.html?spm=a2c4g.11186623.2.20.fDjexq#%E9%94%99%E8%AF%AF%E7%A0%81)**
 
@@ -61,7 +63,7 @@ docker pull l0uie/aliyun-ddns
 2）随后修改config.conf文件，启动容器
 
 ```shell
-docker run -d -v /xxx/config.json:/usr/src/app/conf.d/config.json --name aliyun-ddns  l0uie/aliyun-ddns
+docker run -d --restart=always -v /xxx/config.json:/usr/src/app/conf.d/config.json --name aliyun-ddns  l0uie/aliyun-ddns
 ```
 
 # Q&A
@@ -70,8 +72,8 @@ docker run -d -v /xxx/config.json:/usr/src/app/conf.d/config.json --name aliyun-
 
 若选择源码运行方式，则可以通过cron实现定时任务：
 ```shell
-1 * * * * python /usr/src/app/main.py
+15 * * * * python /usr/src/app/main.py
 ```
 
-其中 `/usr/src/app/main.py` 更改为项目文件实际位置，这将会实现每分钟自动更新，具体命令参数含义，请参考cron介绍。
+其中 `/usr/src/app/main.py` 更改为项目文件实际位置，这将会实现每15分钟自动更新，具体命令参数含义，请参考cron介绍。
 
